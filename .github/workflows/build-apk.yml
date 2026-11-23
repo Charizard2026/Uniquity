@@ -36,7 +36,9 @@ jobs:
         run: |
           python -m pip install lxml
           cd source/uniquity-main/migration
-          curl -fL https://www.unicode.org/Public/UCD/latest/ucdxml/ucd.all.grouped.xml -o ucd.all.grouped.xml
+          curl -fL https://www.unicode.org/Public/UCD/latest/ucdxml/ucd.all.grouped.zip -o ucd.all.grouped.zip
+          unzip -oq ucd.all.grouped.zip
+          test -f ucd.all.grouped.xml
           python init.py
           python ucd.py
           mkdir -p ../app/src/main/assets
