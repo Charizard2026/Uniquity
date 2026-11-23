@@ -14,24 +14,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
           cache: gradle
+
+      - name: Set up Python and lxml
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Extract source ZIP
         run: |
           unzip -q uniquity-main.zip -d source
           test -f source/uniquity-main/gradlew
+
+      - name: Generate full Unicode database
+        run: |
+          python -m pip install lxml
+          cd source/uniquity-main/migration
+          curl -fL https://www.unicode.org/Public/UCD/latest/ucdxml/ucd.all.grouped.xml -o ucd.all.grouped.xml
+          python init.py
+          python ucd.py
+          mkdir -p ../app/src/main/assets
+          cp ucd.db ../app/src/main/assets/ucd.db
+
       - name: Build debug APK
         run: |
           cd source/uniquity-main
           chmod +x ./gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew --no-daemon assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Uniquity-debug-APK
           path: source/uniquity-main/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          retention-days: 14
