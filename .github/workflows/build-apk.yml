@@ -15,6 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Extract source ZIP
+        run: |
+          unzip -q uniquity-main.zip -d source
+          test -f source/uniquity-main/gradlew
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -26,11 +31,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Extract source ZIP
-        run: |
-          unzip -q uniquity-main.zip -d source
-          test -f source/uniquity-main/gradlew
 
       - name: Generate full Unicode database
         run: |
