@@ -22,21 +22,7 @@ jobs:
 
       - name: Make Unicode migration tolerate unnamed groups
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("source/uniquity-main/migration/ucd.py")
-          code = path.read_text()
-          old = '''    if use_name is None:
-      print("[WARN] Group element without a valid name attribute found. Skipping.")
-      elem.clear()
-      continue'''
-          new = '''    if use_name is None:
-      use_name = "Unassigned"'''
-          if old not in code:
-              raise SystemExit("Could not find the expected group-handling code in ucd.py")
-          path.write_text(code.replace(old, new, 1))
-          print("Updated ucd.py to handle unnamed groups.")
-          PY
+          sed -i '/if use_name is None:/,+3c\    if use_name is None:\n      use_name = "Unassigned"' source/uniquity-main/migration/ucd.py
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
