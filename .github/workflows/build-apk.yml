@@ -1,63 +1,28 @@
-name: Build Uniquity APK
-
+name: Build UniKey APK
 on:
-  workflow_dispatch:
   push:
     branches: [main]
-
+  workflow_dispatch:
 permissions:
   contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Extract source ZIP
-        run: |
-          unzip -q uniquity-main.zip -d source
-          test -f source/uniquity-main/gradlew
-
-      - name: Make Unicode migration tolerate unnamed groups
-        run: |
-          sed -i '/if use_name is None:/,+3c\    if use_name is None:\n      use_name = "Unassigned"' source/uniquity-main/migration/ucd.py
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
-
-      - name: Set up Python and lxml
-        uses: actions/setup-python@v5
+      - uses: gradle/actions/setup-gradle@v4
         with:
-          python-version: '3.12'
-
-      - name: Generate full Unicode database
-        run: |
-          python -m pip install lxml
-          cd source/uniquity-main/migration
-          curl -fL https://www.unicode.org/Public/UCD/latest/ucdxml/ucd.all.grouped.zip -o ucd.all.grouped.zip
-          unzip -oq ucd.all.grouped.zip
-          test -f ucd.all.grouped.xml
-          python init.py
-          python ucd.py
-          mkdir -p ../app/src/main/assets
-          cp ucd.db ../app/src/main/assets/ucd.db
-
-      - name: Build debug APK
-        run: |
-          cd source/uniquity-main
-          chmod +x ./gradlew
-          ./gradlew --no-daemon assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+          gradle-version: '8.9'
+      - name: Generate Unicode database (excluding Han)
+        run: python3 tools/build_unicode.py
+      - name: Build APK
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
         with:
-          name: Uniquity-debug-APK
-          path: source/uniquity-main/app/build/outputs/apk/debug/*.apk
+          name: UniKey-debug-APK
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 14
