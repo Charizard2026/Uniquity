@@ -20,13 +20,18 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
+      - name: Extract source ZIP
+        run: |
+          unzip -q uniquity-main.zip -d source
+          test -f source/uniquity-main/gradlew
       - name: Build debug APK
         run: |
+          cd source/uniquity-main
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Uniquity-debug-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: source/uniquity-main/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
